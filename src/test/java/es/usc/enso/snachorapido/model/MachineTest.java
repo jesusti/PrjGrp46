@@ -35,4 +35,15 @@ class MachineTest {
         assertEquals(machine, mesmaMachine);
         assertEquals(machine.hashCode(), mesmaMachine.hashCode());
     }
+    
+    @Test
+    @DisplayName("Rechaza datos obligatorios inválidos")
+    void debeRechazarDatosObligatoriosInvalidos() {
+        // Id, nome e localización son obligatorios.
+        Location location = new Location("LOC-1", "Estacion", 42.88, -8.54);
+
+        assertThrows(IllegalArgumentException.class, () -> new Machine(" ", "Maquina", location));
+        assertThrows(IllegalArgumentException.class, () -> new Machine("M-1", " ", location));
+        assertThrows(IllegalArgumentException.class, () -> new Machine("M-1", "Maquina", null));
+    }
 }

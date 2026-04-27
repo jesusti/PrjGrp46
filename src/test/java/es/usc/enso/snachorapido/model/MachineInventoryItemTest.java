@@ -56,6 +56,29 @@ class MachineInventoryItemTest {
 
         assertEquals(3.75, item.getEstimatedDailyConsumption(), 0.0001);
     }
+    
+    @Test
+    @DisplayName("Rechaza datos iniciais inválidos")
+    void debeRechazarDatosInicialesInvalidos() {
+        // A linha de inventario debe ter datos mínimos consistentes.
+        assertThrows(IllegalArgumentException.class, () -> new MachineInventoryItem(" ", product, 10, 2.5));
+        assertThrows(IllegalArgumentException.class, () -> new MachineInventoryItem("M-1", null, 10, 2.5));
+        assertThrows(IllegalArgumentException.class, () -> new MachineInventoryItem("M-1", product, -1, 2.5));
+        assertThrows(IllegalArgumentException.class, () -> new MachineInventoryItem("M-1", product, 10, 0));
+        assertThrows(IllegalArgumentException.class, () -> new MachineInventoryItem("M-1", product, 10, -0.1));
+    }
 
+    @Test
+    @DisplayName("Rechaza operacións de stock inválidas")
+    void debeRechazarOperacionesDeStockInvalidas() {
+        // Non se permiten cantidades non positivas nin ventas por encima do stock.
+        MachineInventoryItem item = new MachineInventoryItem("M-1", product, 10, 2.5);
+
+        assertThrows(InvalidOperationException.class, () -> item.addUnits(0));
+        assertThrows(InvalidOperationException.class, () -> item.addUnits(-1));
+        assertThrows(InvalidOperationException.class, () -> item.consumeUnits(0));
+        assertThrows(InvalidOperationException.class, () -> item.consumeUnits(-1));
+        assertThrows(InvalidOperationException.class, () -> item.consumeUnits(11));
+    }
 
 }

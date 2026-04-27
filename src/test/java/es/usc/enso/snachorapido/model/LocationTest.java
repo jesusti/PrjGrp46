@@ -54,4 +54,14 @@ class LocationTest {
         assertEquals(loc, mesmoLoc);
         assertEquals(loc.hashCode(), mesmoLoc.hashCode());
     }
+    
+    @Test
+    @DisplayName("Rechaza coordenadas fora de rango")
+    void debeRechazarCoordenadasFueraDeRango() {
+        // A latitude debe estar en [-90, 90] e a lonxitude en [-180, 180].
+        assertThrows(IllegalArgumentException.class, () -> new Location("LOC-1", "Campus", -90.1, -8.54));
+        assertThrows(IllegalArgumentException.class, () -> new Location("LOC-1", "Campus", 90.1, -8.54));
+        assertThrows(IllegalArgumentException.class, () -> new Location("LOC-1", "Campus", 42.88, -180.1));
+        assertThrows(IllegalArgumentException.class, () -> new Location("LOC-1", "Campus", 42.88, 180.1));
+    }
 }
