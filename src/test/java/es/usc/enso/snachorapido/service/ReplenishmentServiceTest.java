@@ -47,4 +47,38 @@ class ReplenishmentServiceTest {
         assertEquals(1, needs.size());
         assertEquals("P-1", needs.getFirst().getProductId());
     }
+
+    @Test
+    @DisplayName("Prioriza las necesidades por fecha limite mas cercana")
+    void debeOrdenarNecesidadesPorFechaLimite() {
+        // Preparacion: el producto P-2 se agota antes que P-1.
+        InMemoryMachineInventoryDao dao = new InMemoryMachineInventoryDao();
+        dao.save(new MachineInventoryItem("M-1", new Product("P-1", "Agua", "Botella"), 10, 2.0));
+        dao.save(new MachineInventoryItem("M-1", new Product("P-2", "Zumo", "Naranja"), 3, 3.0));
+        ReplenishmentService service = new ReplenishmentService(dao);
+
+        // Ejecucion.
+        List<ReplenishmentNeed> needs = service.getReplenishmentNeeds(LocalDate.of(2026, 4, 24));
+
+        // Comprobacion: la primera necesidad es la que tiene menor margen.
+        assertEquals("P-2", needs.getFirst().getProductId());
+        assertEquals("P-1", needs.get(1).getProductId());
+    }
+
+    @Test
+    @DisplayName("Considera urgente un producto sin stock")
+    void debeConsiderarUrgenteProductoSinStock() {
+        // Preparacion: si el stock es cero, el agotamiento es inmediato.
+        InMemoryMachineInventoryDao dao = new InMemoryMachineInventoryDao();
+        dao.save(new MachineInventoryItem("M-1", new Product("P-1", "Agua", "Botella"), 0, 2.0));
+        ReplenishmentService service = new ReplenishmentService(dao);
+
+        // Ejecucion.
+        ReplenishmentNeed need = service.getReplenishmentNeeds(LocalDate.of(2026, 4, 24)).getFirst();
+
+        // Comprobacion: la fecha limite queda el dia anterior a la referencia.
+        assertEquals(LocalDate.of(2026, 4, 24), need.getPredictedDepletionDate());
+        assertEquals(LocalDate.of(2026, 4, 23), need.getLatestReplenishmentDate());
+        assertEquals(1, service.getProductsNeedingReplenishment(LocalDate.of(2026, 4, 24)).size());
+    }
 }
