@@ -1,11 +1,13 @@
 package es.usc.enso.snachorapido.dao.memory;
 
+import es.usc.enso.snachorapido.exception.DuplicateEntityException;
 import es.usc.enso.snachorapido.model.MachineInventoryItem;
 import es.usc.enso.snachorapido.model.Product;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DisplayName("Pruebas unitarias de InMemoryMachineInventoryDao")
@@ -31,6 +33,23 @@ class InMemoryMachineInventoryDaoTest {
         assertEquals(1, dao.findByMachineId("M-1").size());
         assertTrue(dao.findByMachineIdAndProductId("M-1", "P-1").isPresent());
         assertTrue(dao.findByMachineIdAndProductId("M-1", "P-2").isEmpty());
+    }
+
+    @Test
+    @DisplayName("Rechaza el mismo producto duplicado en la misma maquina")
+    void debeRechazarProductoDuplicadoEnLaMismaMaquina() {
+        // Preparacion.
+        InMemoryMachineInventoryDao dao = new InMemoryMachineInventoryDao();
+        MachineInventoryItem item = new MachineInventoryItem(
+            "M-1",
+            new Product("P-1", "Agua", "Botella"),
+            12,
+            3.0
+        );
+        dao.save(item);
+
+        // Comprobacion: no puede existir dos veces el mismo producto en una maquina.
+        assertThrows(DuplicateEntityException.class, () -> dao.save(item));
     }
 
     @Test
